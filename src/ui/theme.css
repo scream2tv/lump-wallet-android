@@ -1,0 +1,189 @@
+/*
+ * Lump Wallet: the LumpTools Midnight look. Night black, electric blue, blue-tinted hairlines; Outfit for the
+ * interface, JetBrains Mono for addresses and amounts. Dark only.
+ *
+ * Shape rules: controls 9px, panels 11px, sheets 17px; circles only for token logos and status dots. Sections are
+ * separated by hairlines, not boxed, unless they group settings or need to read as one object (a panel).
+ */
+:root {
+  --bg: #050507;         /* the page */
+  --bg-2: #0c0e13;       /* panels, inputs */
+  --bg-3: #161a24;       /* raised: logos, pressed keys */
+  --bg-4: #1d2230;       /* pressed */
+  --line: rgba(64, 96, 255, .13);
+  --line-2: rgba(64, 96, 255, .24);
+  --line-3: rgba(64, 96, 255, .55);
+  --fg: #e8eaf3;
+  --fg-hi: #ffffff;
+  --fg-2: #868ba2;
+  --fg-3: #6b7089;
+  --accent: #2b49ff;     /* Midnight electric blue */
+  --accent-2: #5d79ff;   /* the same blue where it must read as text or an icon */
+  --accent-dim: #1e37e0;
+  --accent-wash: rgba(43, 73, 255, .16);
+  --sky: #4d8cff;
+  --good: #16c784;
+  --bad: #ea3943;
+  --warn: #e0a020;
+  --radius: 11px;
+  --radius-s: 9px;
+  --gutter: 19px;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sans: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.4 var(--sans);
+  -webkit-font-smoothing: antialiased; overscroll-behavior: none; user-select: none;
+}
+/* the one flourish: a blue horizon and a fading grid behind the top of every screen */
+body::before {
+  content: ''; position: fixed; inset: 0 0 auto 0; height: 353px; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(95% 100% at 50% -34%, rgba(43, 73, 255, .34), rgba(43, 73, 255, .08) 57%, transparent 79%),
+    linear-gradient(rgba(64, 96, 255, .075) 1px, transparent 1px) 0 0 / 100% 31px,
+    linear-gradient(90deg, rgba(64, 96, 255, .075) 1px, transparent 1px) 50% 0 / 31px 100%;
+  -webkit-mask-image: linear-gradient(#000, rgba(0, 0, 0, .45) 47%, transparent);
+  mask-image: linear-gradient(#000, rgba(0, 0, 0, .45) 47%, transparent);
+}
+#root { position: relative; z-index: 1; }
+
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+input, textarea {
+  font: inherit; color: var(--fg); background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--radius-s);
+  padding: 13px 15px; width: 100%; outline: none; user-select: text; transition: border-color .13s, box-shadow .13s;
+}
+/* a tick box is not a text field: its own size, the wallet's blue, the label beside it */
+input[type="checkbox"] { width: 21px; height: 21px; flex: none; padding: 0; margin: 0; border: 0; background: none; accent-color: var(--accent); box-shadow: none; }
+input::placeholder, textarea::placeholder { color: var(--fg-3); }
+input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(43, 73, 255, .21); }
+
+.screen { min-height: 100%; padding: calc(var(--sat) + 21px) var(--gutter) calc(var(--sab) + 27px); display: flex; flex-direction: column; gap: 19px; max-width: 520px; margin: 0 auto; }
+.title { font-size: 29px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin: 0; color: var(--fg-hi); }
+.muted { color: var(--fg-2); }
+.tiny { font-size: 12px; color: var(--fg-3); }
+.mono { font-family: var(--mono); font-size: 12.5px; letter-spacing: -0.01em; }
+.num, .token, .word { font-variant-numeric: tabular-nums; }
+.err { color: var(--bad); font-size: 13px; }
+.row { display: flex; align-items: center; gap: 13px; }
+.spread { justify-content: space-between; }
+.grow { flex: 1; }
+
+/* buttons */
+.btn {
+  display: block; width: 100%; padding: 15px 17px; border-radius: var(--radius-s); text-align: center; font-weight: 600; color: #fff;
+  background: var(--accent); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17), 0 7px 23px -9px rgba(43, 73, 255, .75);
+  transition: background .11s, transform .11s;
+}
+.btn:active { background: var(--accent-dim); transform: translateY(1px); }
+.btn:disabled { opacity: .41; box-shadow: none; }
+.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-2); box-shadow: none; }
+.btn.ghost:active { background: var(--accent-wash); }
+.icon-btn { width: 37px; height: 37px; display: grid; place-items: center; border-radius: var(--radius-s); color: var(--fg-2); }
+.icon-btn:active { background: var(--bg-3); color: var(--fg); }
+
+/* a panel: one bordered object (settings groups, the fee-energy gauge, review summaries) */
+.card { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 17px; }
+.card.err { border-color: rgba(234, 57, 67, .41); }
+
+/* home: who, how much, state */
+.avatar { width: 39px; height: 39px; border-radius: var(--radius-s); display: grid; place-items: center; color: #fff; background: linear-gradient(147deg, var(--accent-2), var(--accent) 43%, #1226b8); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .23); }
+/* the wallet's own picture in place of the mark */
+.avatar { flex: none; }
+.avatar.pic { padding: 0; overflow: hidden; background: var(--bg-3); box-shadow: inset 0 0 0 1px var(--line-2); }
+.avatar.pic img { width: 100%; height: 100%; display: block; object-fit: cover; border-radius: inherit; }
+.balance { font-variant-numeric: tabular-nums; font-size: 49px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.05; color: var(--fg-hi); }
+.balance .cur { font-size: .51em; font-weight: 500; color: var(--fg-2); margin-right: 3px; vertical-align: .49em; letter-spacing: 0; }
+.balance .cents { color: var(--fg-2); }
+.status { display: flex; align-items: center; gap: 9px; margin-top: 9px; font-size: 14px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-3); flex: none; }
+.dot.ok { background: var(--good); }
+.dot.busy { background: var(--accent-2); }
+.dot.wait { background: var(--warn); }
+.dot.bad { background: var(--bad); }
+.sync { height: 2px; margin-top: 13px; background: var(--line); border-radius: 1px; overflow: hidden; }
+.sync > i { display: block; height: 100%; background: var(--accent-2); transition: width .7s linear; }
+
+/* home: the four things you do, as one instrument strip */
+.actions { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line-2); border-radius: var(--radius); overflow: hidden; background: linear-gradient(180deg, rgba(22, 26, 36, .79), rgba(12, 14, 19, .79)); }
+.action { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 15px 0 13px; font-size: 12px; font-weight: 500; color: var(--fg); border-left: 1px solid var(--line); }
+.action:first-child { border-left: 0; }
+.action .ic { height: 23px; display: grid; place-items: center; color: var(--accent-2); }
+.action:active { background: var(--accent-wash); }
+
+/* underline tabs (Public / Private) */
+.seg { display: flex; gap: 25px; border-bottom: 1px solid var(--line); }
+.seg button { padding: 7px 1px 11px; margin-bottom: -1px; font-weight: 600; color: var(--fg-2); border-bottom: 2px solid transparent; transition: color .13s, border-color .13s; }
+.seg button.on { color: var(--fg-hi); border-bottom-color: var(--accent); }
+
+/* lists */
+.list { margin-top: -9px; }
+.token { display: flex; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.token:last-child { border-bottom: 0; }
+.token .name { font-weight: 600; color: var(--fg-hi); }
+.token .name.mono { font-weight: 500; font-size: 13.5px; color: var(--fg); }
+.logo { width: 37px; height: 37px; flex: none; border-radius: 50%; background: var(--bg-3); border: 1px solid var(--line-2); display: grid; place-items: center; font-weight: 600; font-size: 12px; letter-spacing: .02em; color: var(--fg-2); }
+img.logo.site { border-radius: var(--radius-s); border-color: var(--line-2); background: #000; object-fit: cover; display: block; }
+.logo.brand { border-radius: var(--radius-s); background: linear-gradient(147deg, var(--accent-2), var(--accent) 43%, #1226b8); border-color: transparent; color: #fff; font-size: 14px; }
+
+/* fee energy: a segmented charge gauge */
+.bar { height: 9px; background: var(--bg-3); -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 5px, transparent 5px 7px); mask-image: repeating-linear-gradient(90deg, #000 0 5px, transparent 5px 7px); }
+.bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--sky)); }
+
+/* recovery words */
+.words { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.word { background: var(--bg-2); border: 1px solid var(--line); border-radius: 7px; padding: 9px 11px; font-size: 13px; }
+.word b { color: var(--fg-3); font-weight: 500; margin-right: 6px; font-family: var(--mono); font-size: 11px; }
+.blur { filter: blur(7px); }
+
+/* PIN: a keypad of ruled cells, and bars that fill as you type */
+.pin { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; width: 100%; max-width: 311px; margin: 0 auto; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.pin > * { background: #07080b; }
+.pin button { height: 67px; font-size: 27px; font-weight: 500; color: var(--fg-hi); display: grid; place-items: center; transition: background .08s; }
+.pin button:active { background: var(--bg-3); }
+.pin button.pin-del { color: var(--fg-2); }
+.dots { display: flex; gap: 9px; justify-content: center; }
+.dots i { width: 23px; height: 3px; border-radius: 2px; background: var(--bg-4); transition: background .11s; }
+.dots i.on { background: var(--accent-2); box-shadow: 0 0 11px rgba(93, 121, 255, .75); }
+
+/* the wallet's mark on the welcome and unlock screens */
+.mark { width: 71px; height: 71px; margin: 0 auto; border-radius: 19px; display: grid; place-items: center; color: #fff; background: linear-gradient(147deg, var(--accent-2), var(--accent) 43%, #1226b8); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .27), 0 17px 53px -11px rgba(43, 73, 255, .85); }
+.mark.small { width: 53px; height: 53px; border-radius: 15px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(var(--sab) + 29px); transform: translateX(-50%); background: var(--bg-3); border: 1px solid var(--line-2); padding: 11px 17px; border-radius: var(--radius-s); font-size: 13px; white-space: nowrap; max-width: calc(100% - 34px); overflow: hidden; text-overflow: ellipsis; box-shadow: 0 13px 37px -9px rgba(0, 0, 0, .8); z-index: 11; }
+
+/* dApp approval sheet (bottom) and the in-app browser's top bar; the native dApp view sits right below the bar */
+/* in front of everything of the wallet's own: the lock screen, the PIN before a send */
+.cover { position: fixed; inset: 0; z-index: 21; background: var(--bg); overflow-y: auto; }
+.sheet-back { position: fixed; inset: 0; background: rgba(3, 3, 5, .77); display: flex; align-items: flex-end; z-index: 9; }
+.sheet { width: 100%; max-width: 520px; margin: 0 auto; background: var(--bg-2); border-radius: 17px 17px 0 0; padding: 21px var(--gutter) calc(var(--sab) + 23px); display: grid; gap: 15px; border-top: 1px solid var(--line-2); box-shadow: 0 -23px 61px -17px rgba(43, 73, 255, .33); }
+.sheet .card { background: var(--bg); }
+.browser-title { min-width: 0; text-align: center; padding: 0 5px; }
+.browser-address { height: 37px; padding: 0 13px; font-size: 14px; border-radius: var(--radius-s); min-width: 0; }
+.browser-bar { min-height: calc(var(--sat) + 49px); position: fixed; top: 0; left: 0; right: 0; padding: calc(var(--sat) + 5px) 9px 7px; display: flex; align-items: center; gap: 3px; background: var(--bg); border-bottom: 1px solid var(--line-2); z-index: 2; }
+
+/* NFTs: square tiles; the letter shows until (or unless) the picture loads */
+.nft-grid { display: grid; gap: 9px; }
+.nft-grid.three { grid-template-columns: repeat(3, 1fr); }
+.nft-grid.two { grid-template-columns: repeat(2, 1fr); gap: 15px 11px; }
+.nft { display: grid; gap: 7px; text-align: left; min-width: 0; }
+.nft-pic { position: relative; aspect-ratio: 1; border-radius: var(--radius-s); overflow: hidden; background: linear-gradient(135deg, #161a24, #0c0e13); border: 1px solid var(--line); display: grid; place-items: center; }
+.nft-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .19s; }
+.nft-letter { font-size: 29px; font-weight: 600; color: var(--fg-3); }
+.nft-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nft-hero .nft-pic { border-radius: var(--radius); border-color: var(--line-2); }
+.nft-hero .nft-letter { font-size: 71px; }
+.nft-check { color: var(--accent-2); font-weight: 700; }
+.section-head { display: flex; align-items: center; justify-content: space-between; width: 100%; font-weight: 600; color: var(--fg-hi); }
+.section-head .muted { font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* receive: the code is dark on white (what every scanner reads), framed by the blue line */
+.qr { width: min(100%, 263px); aspect-ratio: 1; border-radius: var(--radius-s); padding: 7px; background: #fff; box-shadow: 0 0 0 1px var(--line-3), 0 19px 57px -17px rgba(43, 73, 255, .7); }

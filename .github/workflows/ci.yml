@@ -1,0 +1,50 @@
+# Type-check, the self-contained tests, the web build, and a debug APK.
+# The on-device suite (test/android/) needs a live deployment and is not run here: docs/BUILDING.md.
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # a placeholder: CI only proves that the app builds
+      VITE_WALLET_HOST: wallet.example.org
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Java 21 (preinstalled on the runner)
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          "$JAVA_HOME_21_X64/bin/java" -version
+      - run: npm ci
+      - name: Type-check
+        run: npx tsc -b
+      - name: Self-contained tests
+        run: |
+          node test/provider-proxy.mjs
+          node test/split.mjs
+      - name: Web build
+        run: npx vite build
+      - run: npx cap sync android
+      - name: Debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --console=plain
+      - uses: actions/upload-artifact@v7
+        with:
+          name: debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7

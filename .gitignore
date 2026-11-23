@@ -1,0 +1,21 @@
+node_modules/
+dist/
+dist-*/
+out/
+*.log
+tsconfig.tsbuildinfo
+
+# deployment-specific settings and anything secret
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+keystore-pass.txt
+
+# test artefacts
+test/out/
+test/profile/
+
+# service switches
+*-HALT.txt

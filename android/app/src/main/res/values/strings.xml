@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Lump Wallet</string>
+    <string name="title_activity_main">Lump Wallet</string>
+    <string name="sync_channel">Sync</string>
+    <string name="sync_note">Syncing</string>
+    <string name="package_name">xyz.lumptools.wallet</string>
+    <string name="custom_url_scheme">xyz.lumptools.wallet</string>
+</resources>

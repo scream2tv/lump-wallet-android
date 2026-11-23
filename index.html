@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+    <meta name="theme-color" content="#050507" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Lump Wallet" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <title>Lump Wallet</title>
+    <style>
+      #boot { position: fixed; inset: 0; display: grid; place-items: center; background: #050507; color: #868ba2; font: 15px -apple-system, system-ui, sans-serif; text-align: center; padding: 23px }
+      #boot b { display: block; color: #ffffff; font-size: 23px; margin-bottom: 9px }
+      #boot pre { white-space: pre-wrap; word-break: break-word; color: #ea3943; font-size: 12px; text-align: left; max-width: 100%; user-select: text; -webkit-user-select: text }
+    </style>
+  </head>
+  <body>
+    <div id="boot"><div><b>Lump Wallet</b><span id="boot-msg">Loading…</span><pre id="boot-err"></pre></div></div>
+    <div id="root"></div>
+    <script>
+      // shown until the app mounts; any startup error is printed here instead of a blank screen
+      (function () {
+        var t0 = Date.now()
+        var msg = document.getElementById('boot-msg'), err = document.getElementById('boot-err')
+        var tick = setInterval(function () {
+          if (!document.getElementById('boot')) return clearInterval(tick)
+          var s = Math.round((Date.now() - t0) / 1000)
+          msg.textContent = s < 4 ? 'Loading…' : 'Loading the Midnight engine (first time ~10 MB over the air)… ' + s + 's'
+        }, 1000)
+        function show(e) { if (err && document.getElementById('boot')) err.textContent += (e && (e.stack || e.message) || String(e)) + '\n' }
+        window.addEventListener('error', function (ev) { show(ev.error || ev.message) })
+        window.addEventListener('unhandledrejection', function (ev) { show(ev.reason) })
+        if (typeof WebAssembly !== 'object') show('This browser has no WebAssembly support.')
+      })()
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

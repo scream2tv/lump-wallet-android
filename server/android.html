@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050507">
+<meta name="robots" content="noindex">
+<title>Lump Wallet · Android beta</title>
+<link rel="icon" href="../icon-192.png">
+<style>
+  :root {
+    --bg: #050507; --panel: #0c0e13; --line: rgba(64, 96, 255, .13); --line-2: rgba(64, 96, 255, .24);
+    --fg: #e8eaf3; --fg-hi: #fff; --dim: #868ba2; --accent: #2b49ff; --tone: #5d79ff;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); -webkit-text-size-adjust: 100%; }
+  body { min-height: 100vh; min-height: 100dvh; display: flex; justify-content: center;
+    background: linear-gradient(180deg, rgba(43, 73, 255, .15), rgba(43, 73, 255, 0) 231px), var(--bg); }
+  main { width: 100%; max-width: 431px; padding: calc(env(safe-area-inset-top, 0px) + 57px) 19px calc(env(safe-area-inset-bottom, 0px) + 37px); display: flex; flex-direction: column; gap: 23px; }
+  .mark { width: 71px; height: 71px; border-radius: 17px; background: linear-gradient(160deg, #4d6bff, #1e37e0); display: grid; place-items: center; box-shadow: 0 0 47px rgba(43, 73, 255, .35); }
+  h1 { margin: 0; font-size: 31px; line-height: 1.1; font-weight: 700; color: var(--fg-hi); letter-spacing: -0.02em; }
+  .sub { margin: 7px 0 0; color: var(--dim); font-size: 15px; }
+  .get { display: block; text-align: center; text-decoration: none; background: var(--accent); color: #fff; font-weight: 600; font-size: 17px; padding: 17px; border-radius: 9px; box-shadow: 0 7px 29px rgba(43, 73, 255, .33); }
+  .get:active { background: #1e37e0; }
+  .meta { margin: -11px 0 0; text-align: center; color: var(--dim); font-size: 13px; line-height: 1.55; font-variant-numeric: tabular-nums; }
+  ol { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); counter-reset: step; }
+  li { counter-increment: step; display: flex; gap: 13px; padding: 15px 17px; font-size: 15px; line-height: 1.45; }
+  li + li { border-top: 1px solid var(--line); }
+  li::before { content: counter(step); flex: none; width: 23px; color: var(--tone); font-family: var(--mono); font-size: 13px; padding-top: 2px; }
+  .note { color: var(--dim); font-size: 13px; line-height: 1.5; margin: 0; }
+  .sum { font-family: var(--mono); font-size: 11px; color: var(--dim); overflow-wrap: anywhere; line-height: 1.5; margin: 0; }
+  .sum b { display: block; color: var(--fg); font-weight: 500; font-family: var(--sans); font-size: 13px; margin-bottom: 3px; }
+  a.plain { color: var(--tone); text-decoration: none; }
+  #ios { display: none; border: 1px solid var(--line-2); border-radius: 11px; background: var(--panel); padding: 15px 17px; font-size: 15px; line-height: 1.45; }
+</style>
+</head>
+<body>
+<main>
+  <div class="mark" aria-hidden="true">
+    <svg width="37" height="37" viewBox="0 0 24 24"><path fill="#fff" d="M20.6 14.1A8.6 8.6 0 1 1 9.9 3.4a.6.6 0 0 1 .75.76 6.9 6.9 0 0 0 9.19 9.19.6.6 0 0 1 .76.75z"/></svg>
+  </div>
+  <div>
+    <h1>Lump Wallet</h1>
+    <p class="sub">Android beta · Midnight mainnet</p>
+  </div>
+
+  <div id="ios">This download is for Android phones. On an iPhone, open the <a class="plain" href="../">web wallet</a> in Safari and add it to your home screen.</div>
+
+  <a class="get" href="LumpWallet.apk" download="{{file}}">Download for Android</a>
+  <p class="meta">Version {{version}} · build {{build}} · {{size}}<br>Published {{date}}</p>
+
+  <ol>
+    <li>Tap Download, then open the file when it finishes.</li>
+    <li>Android asks once to allow installs from your browser. Allow it, then tap Install.</li>
+    <li>Open Lump Wallet and create a wallet or bring your 24 words.</li>
+  </ol>
+
+  <p class="note">Beta software. Your keys are made on your phone and stay there, and your 24 words are the only backup: write them down. Updates come from this page and install over the old version. The app shows its build number at the bottom of Settings.</p>
+
+  <p class="sum"><b>File check (SHA-256)</b>{{sha256}}</p>
+</main>
+<script>
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) document.getElementById('ios').style.display = 'block'
+</script>
+</body>
+</html>

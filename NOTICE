@@ -1,0 +1,12 @@
+Lump Wallet
+Copyright 2026 The Lump Wallet contributors
+
+This product includes software developed by the Midnight Foundation and its contributors
+(the Midnight wallet SDK and DApp connector API, Apache License 2.0; the Midnight ledger
+packages under their own terms), the Capacitor
+project (MIT), React (MIT), and the other open-source packages listed in package.json and
+package-lock.json, each under its own license.
+
+server/cardano/dust-mapping-validator.plutusV3.hex is the compiled cNIGHT-to-DUST mapping
+validator as deployed on Cardano mainnet; it is reproduced here unchanged so that the
+server can check that it builds transactions for that contract and no other.

@@ -1,0 +1,10 @@
+{
+  "name": "lump-wallet-cardano-door",
+  "private": true,
+  "type": "module",
+  "description": "Builds the wallet's Cardano transactions (DUST registration, move out) from our own Kupo + Ogmios; signs nothing",
+  "dependencies": {
+    "@lucid-evolution/lucid": "0.4.34"
+  },
+  "engines": { "node": ">=22.12" }
+}
