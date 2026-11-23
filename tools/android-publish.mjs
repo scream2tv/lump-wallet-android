@@ -36,7 +36,12 @@ if (min > code) { console.error(`the floor ${min} is above this build (${code}):
 
 const st = statSync(apk)
 const sha256 = createHash('sha256').update(readFileSync(apk)).digest('hex')
-const entry = { file, version: m[1], code, min, size: st.size, sha256, built: st.mtime.toISOString(), published: new Date().toISOString() }
+// what the release script wrote beside the APK: the commit it was built from and the certificate that signed it
+let note = null
+try { note = JSON.parse(readFileSync(apk.replace(/[.]apk$/, '.json'), 'utf8')) } catch { /* a build from before the release notes */ }
+if (note && note.sha256 !== sha256) { console.error('the note beside this APK is for another file (checksums differ): build it again'); process.exit(2) }
+const entry = { file, version: m[1], code, min, size: st.size, sha256, built: st.mtime.toISOString(), published: new Date().toISOString(), ...(note ? { commit: note.commit, signer: note.signer } : {}) }
 writeFileSync(join(OUT, 'published.json'), JSON.stringify(entry, null, 2) + '\n')
 console.log(`published ${file}\n  version ${entry.version} (code ${entry.code}) · ${(st.size / 1048576).toFixed(1)} MB\n  sha256 ${sha256}`)
+console.log(note ? `  commit ${note.commit}\n  signer ${note.signer?.sha256}` : '  (no release note beside the APK: the commit and signer are not recorded)')
 console.log(min ? `  copies below build ${min} are told they MUST update${min === code ? ' (every older copy)' : ''}` : '  older copies are offered the update and may put it off')

@@ -82,10 +82,13 @@ Put the keystore password in a file next to it (`keystore-pass.txt`), readable o
 LUMP_KEYSTORE=/secure/place/release.jks EXPECT_SIGNER="CN=My Wallet" bash tools/android-release.sh
 ```
 
-The script builds the web code, syncs it into the Android project, runs `assembleRelease`, verifies that the APK
+The script refuses to build from uncommitted changes in what goes into the app (`ALLOW_DIRTY=1` overrides and
+marks the build), and hands the keystore password to the Gradle step only, not to the web build before it.
+It builds the web code, syncs it into the Android project, runs `assembleRelease`, verifies that the APK
 is signed by the certificate you named, **scans the finished APK for anything that names the build machine or its
 user** (user name, home folders, local paths; `LUMP_PRIVACY_NEEDLES` adds patterns), and writes
-`out/android/LumpWallet-<version>-<code>.apk` with its SHA-256.
+`out/android/LumpWallet-<version>-<code>.apk` with its SHA-256, and a note beside it (`.json`: the commit, the
+signing certificate, the checksum) that publishing carries into `published.json`.
 
 The version code defaults to minutes since 1970, so every build is newer than the last. Gradle reads the keystore
 from `LUMP_KEYSTORE` and `LUMP_KEYSTORE_PASS`; without them `assembleRelease` leaves the APK unsigned.
@@ -132,6 +135,7 @@ spare ports and uses throwaway wallets:
 | `test/wallets.mjs` | Several wallets: add, switch, remove, storage separation |
 | `test/favorites-ui.mjs` | Browser favorites |
 | `test/dapp-queue.mjs` | Approval queue: one send per transaction, late requests, expiry |
+| `test/keystore-move.mjs` | The device key's move into a system key store, played with a stand-in store: stopped half-way, finished at the next unlock, a store that cannot be read, the files without the store |
 | `test/dapp-hostile.mjs` | A hostile site at the connector: refused before any sheet, nothing signed; full amounts on the sheet; trades paid to another address |
 | `test/smoke.mjs` | New wallet to the home screen (needs the local services) |
 | `test/cardano-keys.mjs` | Cardano key derivation and signatures against a full Cardano library (`npm ci` in `server/cardano` first) |
@@ -145,6 +149,7 @@ server):
 | `release-smoke.mjs <apk>` | A release build starts, is not debuggable, has backups off, asks only for its listed permissions, keeps its WebViews closed, logs no wallet data |
 | `handoff.mjs` | A browser creates a wallet and shares its sync; the app imports the same words and picks it up |
 | `background.mjs` | A sync continues at the same pace after the app is left |
+| `upgrade.mjs <old apk> <new apk>` | An update over an installed copy: a wallet made by the old build opens after the new one is installed over it, and its device key has moved into the Keystore (both debug builds, same signing key) |
 
 The emulator needs a "Google Play" system image to behave like a retail phone: plain images open every app's
 WebViews to inspection and would hide whether a release build is closed.

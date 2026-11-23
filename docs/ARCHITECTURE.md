@@ -79,9 +79,10 @@ start), saves the encrypted sync cache, builds and sends transactions, and serve
   SDK's HD scheme, account 0. The Cardano account is derived from the same words by CIP-1852
   (`m/1852'/1815'/0'`, payment key `0/0`, stake key `2/0`), so a standard Cardano wallet restores the same address.
 - **Two locks on the phrase** (`vault.ts`). The phrase is encrypted with AES-256-GCM under a key from the PIN
-  (scrypt, N = 2^16), and that result again under a **device key**. On a shell with a system key store the device
-  key lives there and never appears in a backup. **On Android today the shell has no key-store plugin yet**, so the
-  device key is a non-extractable WebCrypto key kept by the WebView beside the data. That matters; see
+  (scrypt, N = 2^16), and that result again under a **device key**. On Android the device key is kept by the
+  Android Keystore (`SecureStorePlugin.java`): a copy of the app's files is useless without the phone. Copies from
+  before the Keystore store move their key there at the first unlock after updating. In a browser the device key
+  is a non-extractable WebCrypto key in the browser's own storage. What this does and does not cover:
   [the security model](SECURITY.md#the-recovery-phrase-at-rest).
 - **Wrong PINs make the wallet wait** (`attempts.ts`), longer each time, on a clock that changing the device's time
   does not skip.
@@ -227,6 +228,7 @@ sequenceDiagram
 | `DappBrowserPlugin` | The in-app browser: second WebView, document-start script, message listener with origin and main-frame check, own storage profile, localhost blocked |
 | `AppShellPlugin` | System Back, clipboard read for Paste, share sheet, opening a link in the phone's browser, version info |
 | `KeepAwakePlugin` | Screen stays on during a sync; starts and stops the background service |
+| `SecureStorePlugin` | Small secrets encrypted with an Android Keystore key that cannot leave the phone; holds the wallet's device key |
 | `SyncService` | Foreground service (type `dataSync`) with a notification and a wake lock capped at six hours |
 
 Permissions: `INTERNET`, `CAMERA` (QR scanning, asked when the scanner first opens), and what a foreground service
@@ -234,7 +236,8 @@ needs (`FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`, `WAKE_LOCK`, `POST_
 component is the launcher activity. Release builds are not debuggable and their WebViews are closed to inspection.
 
 A shell on another platform has to provide the same plugins; the web code falls back when one is missing (no
-in-app browser, the screen follows the system setting, the device key is kept by the WebView).
+in-app browser, the screen follows the system setting, the device key is kept by the WebView). There is no
+fingerprint or face unlock on Android yet.
 
 ## Updates
 

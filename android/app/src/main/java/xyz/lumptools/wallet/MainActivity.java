@@ -21,6 +21,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AppShellPlugin.class);
         registerPlugin(DappBrowserPlugin.class);
         registerPlugin(KeepAwakePlugin.class);
+        registerPlugin(SecureStorePlugin.class);
         super.onCreate(savedInstanceState);
         lightBarIcons();
     }

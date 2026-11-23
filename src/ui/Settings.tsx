@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { DEFAULTS, loadEndpoints, saveEndpoints, type Endpoints, diagnosticsOn, setDiagnostics } from '../core/net'
 import { disableBiometrics, enableBiometrics, listWallets, removeWallet, renameWallet, unlockWithPin, vaultInfo } from '../core/vault'
-import { biometry, biometryName, type Biometry } from '../core/device'
+import { biometry, biometryName, ownStoreName, systemStoreName, type Biometry } from '../core/device'
 import { AUTO_LOCK_CHOICES, lockSettings, saveLockSettings } from '../core/lock'
 import { PinAsk } from './PinAsk'
 import { confirmUser } from './Confirm'
@@ -179,7 +179,7 @@ export function Settings({ session, snap, walletId, walletName, onRenamed, onBac
       </div>
       <div className="tiny">
         {kept?.locks === 2
-          ? `Your recovery phrase is locked with your PIN and a key kept in ${kept.where === 'keychain' ? 'the Keychain of this device' : 'this browser'}. ${kept.where === 'keychain' ? 'A copy of the app\'s data cannot be opened anywhere else.' : 'Both are kept in this app\'s own storage, so the PIN is what protects a copy of that storage.'} After moving to a new phone, restore with the 24 words.`
+          ? `Your recovery phrase is locked with your PIN and a key kept in ${kept.where === 'keychain' ? `the ${systemStoreName()} of this device` : ownStoreName()}. ${kept.where === 'keychain' ? 'A copy of the app\'s data cannot be opened anywhere else.' : 'Both are kept in this app\'s own storage, so the PIN is what protects a copy of that storage.'} After moving to a new phone, restore with the 24 words.`
           : 'Your recovery phrase is locked with your PIN.'}
         {' '}Wrong PINs make the wallet wait, longer each time.
       </div>

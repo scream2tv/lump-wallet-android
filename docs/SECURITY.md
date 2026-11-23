@@ -39,19 +39,29 @@ trust, build your own copy against services you run: [Self-hosting](SELF-HOSTING
 The 24 words are stored encrypted twice (`src/core/vault.ts`): under a key derived from the PIN (scrypt, N = 2^16,
 then AES-256-GCM) and then under a device key.
 
-- On a shell with a system key store, the device key lives there, is readable only on that device, and is not in
-  any backup. A copy of the app's data is then useless without the device.
-- **On Android today, the device key is a non-extractable WebCrypto key held in the WebView's own storage**, because
-  the Android shell does not have a key-store plugin yet. It sits beside the encrypted phrase. Someone who obtains
-  a full copy of the app's private storage (a rooted or compromised device, forensic extraction) is therefore held
-  back by the PIN alone, and a six-digit PIN has one million values. scrypt slows each guess; it does not make a
-  million guesses infeasible offline. **Moving the device key into the Android Keystore is the first item on the
-  hardening list.**
+- **On Android the device key is kept by the Android Keystore** (`SecureStorePlugin.java`): it is encrypted with a
+  Keystore key that cannot be taken off the phone (on phones with the hardware for it, the key never leaves that
+  hardware), and only the encrypted value is in the app's files. A copy of the app's files is then useless without
+  the phone: the stored phrase cannot even be tried against a PIN.
+- **What that does not cover.** Someone with full control of the running phone (root, or malware with the app's own
+  rights) can ask the Keystore to decrypt as the app does, and is then held back by the PIN alone. A six-digit PIN
+  has one million values; scrypt slows each guess and does not make a million guesses infeasible. The Keystore key
+  is not bound to the screen lock or to a fingerprint, on purpose: both bindings have a history of keys that stop
+  working on some phones, and a device key that stops working means restoring from the 24 words.
+- **Copies installed before 23 November 2026** kept the device key in the WebView's own storage, beside the data it
+  locks. They move it into the Keystore at the first unlock after updating (`moveToSystemStore` in
+  `src/core/vault.ts`): each wallet's outer lock is re-made and read back before it is stored, and the old key is
+  deleted only when every wallet opens with the new one. A copy that has not updated is still held back by the PIN
+  alone against someone who has its files.
+- In a browser (the web build) there is no system key store: the device key is a non-extractable WebCrypto key in
+  the browser's own storage, beside the data.
 - The app's data is excluded from Android backup and device transfer.
 - Wrong PINs make the wallet wait: after four misses, each further one costs half a minute, a minute, five
   minutes, fifteen, then an hour each. This protects against someone holding the phone, not against an offline
   copy.
-- The encrypted sync cache is protected by a key derived from the PIN's scrypt output alone.
+- The encrypted sync cache is protected by a key derived from the PIN's scrypt output alone. It holds no recovery
+  phrase and no spending key, but someone with a copy of it can test PIN guesses against it offline, and a found
+  PIN reveals what the cache holds (which coins are the wallet's).
 
 ## While the wallet is unlocked
 
@@ -141,11 +151,15 @@ door is treated as untrusted: it can refuse service, and it should not be able t
 - The update notice is not signed separately from the transport.
 - Whoever holds the release key can ship code to every install. Key custody is the publisher's responsibility;
   a fork must generate its own key (see [Building](BUILDING.md#release-signing)).
+- A published build records the commit it was built from and the certificate that signed it
+  (`out/android/published.json` on the wallet server), and the release script refuses to build from uncommitted
+  changes.
 
 ## Known limits
 
 - No independent audit.
-- The Android device key is not yet in the Android Keystore (above).
+- Android copies that have not updated since 23 November 2026 keep their device key outside the Keystore (above).
+- The sync cache is a place to test PIN guesses for someone who has a copy of the app's files (above).
 - The proof server sees private-spend key material (above).
 - No biometric unlock on Android yet.
 - No `FLAG_SECURE`.

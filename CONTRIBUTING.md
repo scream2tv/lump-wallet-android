@@ -6,7 +6,7 @@ code and say what is wrong with it. Criticism is as welcome as code.
 ## Ways to help
 
 - **Read and question.** The most useful starting points are [the security model](docs/SECURITY.md), the vault
-  (`src/core/vault.ts`), what a site's transaction may carry (`src/dapp/guard.ts`), the Cardano transaction checks
+  (`src/core/vault.ts`, and `SecureStorePlugin.java` for where its second key is kept), what a site's transaction may carry (`src/dapp/guard.ts`), the Cardano transaction checks
   (`src/core/cardanoTx.ts`), and the native in-app browser
   (`android/.../DappBrowserPlugin.java`).
 - **Report a problem** in an issue: what you did, what you expected, what happened, the build number from the

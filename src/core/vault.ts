@@ -21,7 +21,7 @@
 // use, and the next free id. While the app is unlocked it keeps those keys (they cannot be exported, and the PIN is
 // not among them), so switching and adding need no second PIN; locking drops them.
 import { scrypt } from '@noble/hashes/scrypt.js'
-import { createDeviceKey, deviceStore, loadDeviceKey, readBiometricSecret, removeBiometricSecret, removeDeviceKey, saveBiometricSecret, type DeviceStore } from './device'
+import { createDeviceKey, deviceStore, loadDeviceKey, readBiometricSecret, removeBiometricSecret, removeBrowserDeviceKey, removeDeviceKey, saveBiometricSecret, type DeviceStore } from './device'
 import { pinFailed, pinOk, pinWaitMs } from './attempts'
 import { forgetLockSettings, lockSettings, saveLockSettings } from './lock'
 import { FIRST, forgetAllScoped, forgetScoped, isWalletId, scoped } from './scope'
@@ -170,6 +170,63 @@ async function upgrade(walletId: string, blob: VaultBlob) {
   try { localStorage.setItem(blobKey(walletId), JSON.stringify(await withDeviceLock(blob, false))) } catch (e) { console.warn('vault: kept the PIN-only format', (e as Error)?.message ?? e) }
 }
 
+/**
+ * The device key moves from the web view's own store into the system's key store, once the app's shell has one
+ * (Android got its Keystore store on 2026-11-23; until then the key sat beside the data it locks, so a copy of the
+ * app's files was held back by the PIN alone).
+ *
+ * Every wallet's outer lock is opened with the old key and closed with the new one; the PIN's lock inside is not
+ * touched, so no PIN is needed. A wallet is rewritten only after its new lock was opened again with the key read
+ * back from the system store, and the old key is thrown away only when every wallet of the device is under the new
+ * one and opens. Stopped half-way (the app killed), both keys are still there and each wallet names the store its
+ * key is in: the next unlock goes on where this one stopped. Never in the way of an unlock: on any problem
+ * everything stays as it was.
+ */
+export async function moveToSystemStore(): Promise<'moved' | 'nothing' | 'kept'> {
+  try {
+    if ((await deviceStore()) !== 'keychain') return 'nothing'
+    const ids = [...new Set([FIRST, ...readIndex().list.map((w) => w.id)])]
+    const here = ids.map((id) => ({ id, blob: readBlob(id) })).filter((x): x is { id: string; blob: VaultV2 } => x.blob?.v === 2)
+    const todo = here.filter((x) => x.blob.where === 'browser')
+    if (todo.length === 0) return 'nothing'
+    const old = await loadDeviceKey('browser')
+    // no old key: those wallets cannot be opened by anything any more, and nothing may be put in the key's place
+    if (!old) return 'kept'
+    // the system store's key: the one that is there (an earlier, unfinished move), else a new one
+    const next = (await loadDeviceKey('keychain')) ?? (await createDeviceKey()).key
+    for (const { id, blob } of todo) {
+      const inner = new Uint8Array(await crypto.subtle.decrypt(gcm(unb64(blob.div)), old, unb64(blob.ct) as BufferSource))
+      const div = crypto.getRandomValues(new Uint8Array(12))
+      const outer = new Uint8Array(await crypto.subtle.encrypt(gcm(div), next, inner as BufferSource))
+      // as the next unlock will: the key read from the system store opens what was just closed
+      const again = await loadDeviceKey('keychain')
+      if (!again) throw new Error('the system key store did not keep the device key')
+      const back = new Uint8Array(await crypto.subtle.decrypt(gcm(div), again, outer as BufferSource))
+      const same = back.length === inner.length && back.every((x, i) => x === inner[i])
+      inner.fill(0); back.fill(0)
+      if (!same) throw new Error('the new device lock did not open again')
+      const moved: VaultV2 = { ...blob, ct: b64(outer), div: b64(div), where: 'keychain' }
+      const text = JSON.stringify(moved)
+      localStorage.setItem(blobKey(id), text)
+      if (localStorage.getItem(blobKey(id)) !== text) throw new Error('the moved lock was not stored')
+    }
+    // the old key goes only when nothing needs it any more: every wallet names the system store and opens with its key
+    const key = await loadDeviceKey('keychain')
+    if (!key) throw new Error('the system key store did not keep the device key')
+    for (const id of ids) {
+      const b = readBlob(id)
+      if (!b || b.v !== 2) continue
+      if (b.where !== 'keychain') return 'kept'
+      await crypto.subtle.decrypt(gcm(unb64(b.div)), key, unb64(b.ct) as BufferSource)
+    }
+    await removeBrowserDeviceKey()
+    return 'moved'
+  } catch (e) {
+    console.warn('vault: the device key stays where it is', (e as Error)?.message ?? e)
+    return 'kept'
+  }
+}
+
 /** Returns the wallet in use opened, or null for a wrong PIN. No attempt counting: see unlockWithPin. */
 export async function openVault(pin: string): Promise<Unlocked | null> {
   const walletId = activeWalletId()
@@ -181,6 +238,8 @@ export async function openVault(pin: string): Promise<Unlocked | null> {
   raw.fill(0)
   const mnemonic = await openWith(blob, keys.vaultKey)
   if (mnemonic == null) return null
+  // first the move (it gives the system store its key), then a PIN-only wallet gets its device lock under that key
+  await moveToSystemStore()
   await upgrade(walletId, blob)
   return { mnemonic, stateKey: await stateKeyFor(keys, walletId), walletId, keys }
 }

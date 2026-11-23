@@ -11,7 +11,12 @@
 //    be opened and a send confirmed with a glance. It is released only after the system has matched the face or
 //    finger, and is thrown away by the system when the enrolled faces or fingers change.
 //
-// Native side: ios/App/App/DappBrowser.swift, SecureStorePlugin.
+// Native side: ios/App/App/DappBrowser.swift, SecureStorePlugin (the Keychain); on Android SecureStorePlugin.java (a
+// value encrypted with a key of the Android Keystore, kept in the app's own files, which are in no backup). Android
+// has no fingerprint or face unlock yet: its biometry() answers "none".
+//
+// An app that kept its device key in the web view's store and then gets a shell with a system key store moves the
+// key over at the next unlock (core/vault.ts, moveToSystemStore).
 import { Capacitor, registerPlugin } from '@capacitor/core'
 
 interface SecureStorePlugin {
@@ -101,6 +106,17 @@ export async function createDeviceKey(): Promise<{ key: CryptoKey; store: Device
   if (!(back instanceof CryptoKey)) throw new Error('the browser did not keep the device key')
   return { key: back, store }
 }
+
+/** Only the web view's copy: after every wallet's lock was moved to the system key store (core/vault.ts). */
+export async function removeBrowserDeviceKey() {
+  await idbDo('readwrite', (s) => s.delete(ROW))
+}
+
+/** Where the device key is when there is no system key store, for the screens. */
+export const ownStoreName = () => (Capacitor.isNativePlatform() ? 'this app' : 'this browser')
+
+/** What the system's key store is called on this device, for the screens. */
+export const systemStoreName = () => (Capacitor.getPlatform() === 'android' ? 'Keystore' : 'Keychain')
 
 export async function removeDeviceKey() {
   try { if (await hasKeychain()) await Native.remove({ key: DEVICE_KEY }) } catch { /* nothing to remove, or no Keychain */ }

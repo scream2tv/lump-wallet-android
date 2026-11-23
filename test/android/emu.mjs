@@ -172,6 +172,9 @@ try {
   const t0 = Date.now()
   await page.getByText('Fee energy', { exact: true }).waitFor({ timeout: 180_000 })
   check('wallet created, Home shows', true, `${((Date.now() - t0) / 1000).toFixed(1)} s after the PIN`)
+  // the second lock on the phrase: its key is kept by the Android Keystore store, not by the web view
+  const lock = await page.evaluate(() => { try { const b = JSON.parse(localStorage.getItem('lump.vault.v1') ?? 'null'); return { v: b?.v, where: b?.where } } catch { return null } })
+  check('the new wallet\'s device key is in the Keystore store', lock?.v === 2 && lock.where === 'keychain', JSON.stringify(lock))
   await shot('home-syncing')
   let s = '', last = ''
   while (Date.now() - t0 < SYNC_MAX_S * 1000) {
@@ -181,7 +184,7 @@ try {
     await sleep(1500)
   }
   info.syncSeconds = Number(((Date.now() - t0) / 1000).toFixed(0))
-  check('new wallet syncs to "Up to date" (node, indexer and snapshot of the build's wallet server)', /Up to date/.test(s), `${info.syncSeconds} s · last status "${s}"`)
+  check('new wallet syncs to "Up to date" (node, indexer and snapshot from the wallet server of the build)', /Up to date/.test(s), `${info.syncSeconds} s · last status "${s}"`)
   await shot('home')
 
   // ---- the Cardano tab: the wallet's Cardano address, what is on it and its buttons, on the device ----
@@ -190,7 +193,7 @@ try {
   await page.locator('[data-energy="none"]').waitFor({ timeout: 45_000 }).catch(() => {})
   info.cardanoText = (await page.locator('[data-energy]').innerText()).replace(/\s+/g, ' ')
   const cardanoButtons = await page.getByRole('button', { name: 'Register', exact: true }).isVisible() && await page.getByRole('button', { name: 'Move NIGHT and ADA out' }).isVisible() && await page.getByRole('button', { name: 'Copy address' }).isVisible()
-  check('Cardano tab shows the address, what is on it, and its three buttons (the wallet server's Cardano service)', /addr1q[0-9a-z]{40,}/.test(info.cardanoText) && /On it now 0 NIGHT · 0\.00 ADA/.test(info.cardanoText) && cardanoButtons, info.cardanoText.slice(0, 200))
+  check('Cardano tab shows the address, what is on it, and its three buttons (the Cardano service of the wallet server)', /addr1q[0-9a-z]{40,}/.test(info.cardanoText) && /On it now 0 NIGHT · 0\.00 ADA/.test(info.cardanoText) && cardanoButtons, info.cardanoText.slice(0, 200))
   await shot('home-cardano')
   // Receive and Send on this tab are about the Cardano address
   await page.locator('.action', { hasText: 'Receive' }).click()
