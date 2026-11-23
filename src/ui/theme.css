@@ -93,7 +93,7 @@ input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px
 .card.err { border-color: rgba(234, 57, 67, .41); }
 
 /* home: who, how much, state */
-.avatar { width: 39px; height: 39px; border-radius: var(--radius-s); display: grid; place-items: center; color: #fff; background: linear-gradient(147deg, var(--accent-2), var(--accent) 43%, #1226b8); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .23); }
+.avatar { width: 39px; height: 39px; border-radius: var(--radius-s); display: grid; place-items: center; background: var(--bg-2); box-shadow: inset 0 0 0 1px var(--line-2); }
 /* the wallet's own picture in place of the mark */
 .avatar { flex: none; }
 .avatar.pic { padding: 0; overflow: hidden; background: var(--bg-3); box-shadow: inset 0 0 0 1px var(--line-2); }
@@ -153,7 +153,7 @@ img.logo.site { border-radius: var(--radius-s); border-color: var(--line-2); bac
 .dots i.on { background: var(--accent-2); box-shadow: 0 0 11px rgba(93, 121, 255, .75); }
 
 /* the wallet's mark on the welcome and unlock screens */
-.mark { width: 71px; height: 71px; margin: 0 auto; border-radius: 19px; display: grid; place-items: center; color: #fff; background: linear-gradient(147deg, var(--accent-2), var(--accent) 43%, #1226b8); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .27), 0 17px 53px -11px rgba(43, 73, 255, .85); }
+.mark { width: 71px; height: 71px; margin: 0 auto; border-radius: 19px; display: grid; place-items: center; background: var(--bg-2); box-shadow: inset 0 0 0 1px var(--line-2), 0 17px 53px -11px rgba(43, 73, 255, .6); }
 .mark.small { width: 53px; height: 53px; border-radius: 15px; }
 
 .toast { position: fixed; left: 50%; bottom: calc(var(--sab) + 29px); transform: translateX(-50%); background: var(--bg-3); border: 1px solid var(--line-2); padding: 11px 17px; border-radius: var(--radius-s); font-size: 13px; white-space: nowrap; max-width: calc(100% - 34px); overflow: hidden; text-overflow: ellipsis; box-shadow: 0 13px 37px -9px rgba(0, 0, 0, .8); z-index: 11; }

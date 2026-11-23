@@ -66,7 +66,7 @@ export function Onboarding({ onDone, add }: { onDone: (u: Unlocked, opts?: Start
       {add && <button className="muted" data-back style={{ textAlign: 'left' }} onClick={add.onCancel}>‹ Back</button>}
       <div className="grow" style={{ display: 'grid', placeItems: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div className="mark"><Mark size={37} /></div>
+          <div className="mark"><Mark size={61} /></div>
           <h1 className="title" style={{ marginTop: 23 }}>{add ? 'Add a wallet' : 'Lump Wallet'}</h1>
           <p className="muted">{add ? 'Its own 24 words, the same PIN.' : 'Your keys. Your night.'}</p>
         </div>

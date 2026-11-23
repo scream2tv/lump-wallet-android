@@ -34,7 +34,7 @@ export function Unlock({ onUnlock, onReset, resume }: { onUnlock: (u: Unlocked) 
 
   if (moved) return (
     <div className="screen" style={{ justifyContent: 'center' }}>
-      <div className="mark small"><Mark size={27} /></div>
+      <div className="mark small"><Mark size={45} /></div>
       <h1 className="title" style={{ textAlign: 'center' }}>Restore needed</h1>
       <div className="card">
         <p style={{ marginTop: 0 }}>This wallet's data came from a backup or another device. The recovery phrase stored in it can only be opened on the device that made it.</p>
@@ -46,7 +46,7 @@ export function Unlock({ onUnlock, onReset, resume }: { onUnlock: (u: Unlocked) 
 
   return (
     <div className="screen" style={{ justifyContent: 'center' }}>
-      <div className="mark small"><Mark size={27} /></div>
+      <div className="mark small"><Mark size={45} /></div>
       <h1 className="title" style={{ textAlign: 'center' }}>Lump Wallet</h1>
       <p className="muted" style={{ textAlign: 'center', margin: 0 }}>{resume ? 'Locked · enter your PIN' : 'Enter your PIN'}</p>
       <PinAsk attempt={unlockWithPin} onOk={onUnlock} onMoved={() => setMoved(true)} />

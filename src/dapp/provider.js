@@ -144,7 +144,7 @@
   const initial = Object.freeze({
     rdns: 'xyz.lumptools.wallet',
     name: 'Lump Wallet',
-    icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#7c5cff"/><path d="M23 17v30h19" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>'),
+    icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="21" fill="#0C0E13"/><g transform="translate(6.719999999999999 7.579999999999999) scale(0.86)"><path d="M45 37V24.5a10.5 10.5 0 0 1 21 0V26" fill="none" stroke="#5D79FF" stroke-width="4.2" stroke-linecap="round"/><circle cx="66.5" cy="28.5" r="6.2" fill="#FFFFFF"/><ellipse cx="48" cy="56" rx="25" ry="24" fill="#2B49FF"/><circle cx="27" cy="65" r="11" fill="#2B49FF"/><circle cx="69" cy="65" r="11" fill="#2B49FF"/><ellipse cx="48" cy="68" rx="22" ry="14" fill="#2B49FF"/><circle cx="37" cy="52" r="7" fill="#FFFFFF"/><circle cx="59" cy="52" r="7" fill="#FFFFFF"/><circle cx="37" cy="52" r="3.4" fill="#0C0E13"/><circle cx="59" cy="52" r="3.4" fill="#0C0E13"/><path d="M34 66.9 37 61.2 40 69.1ZM41.4 69.8 44.4 63.1 47.2 70.3ZM48.8 70.3 51.6 63.1 54.6 69.8ZM56 69.1 59 61.2 62 66.9Z" fill="#FFFFFF"/><path d="M27.5 62.5Q48 78 68.5 62.5" fill="none" stroke="#0C0E13" stroke-width="2.6" stroke-linecap="round"/></g></svg>'),
     apiVersion: API_VERSION,
     connect: async (networkId) => {
       await call('connect', [String(networkId)])

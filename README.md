@@ -1,3 +1,5 @@
+<img src="docs/brand/icon.svg" width="96" height="96" alt="The Lump Wallet mark: a deep-sea angler with its light">
+
 # Lump Wallet for Android
 
 A mobile wallet for the [Midnight](https://midnight.network) network, with the Cardano side that Midnight's fee
@@ -119,6 +121,6 @@ desktop browser with `npm run dev`. Details, release signing and the update chan
 
 ## License
 
-[Apache-2.0](LICENSE). "Lump Wallet", the crescent mark and the app icons are the project's names and marks: a
+[Apache-2.0](LICENSE). "Lump Wallet", the angler mark ([docs/brand](docs/brand)) and the app icons are the project's names and marks: a
 fork that is distributed to others should carry its own name, icon and application id
 (see [Building](docs/BUILDING.md#making-it-your-own)).

@@ -166,7 +166,7 @@ export function Home({ session, walletId, keys, onSwitch, onAdded, onLock, onRem
       <div className="row spread">
         <div className="row" style={{ textAlign: 'left' }}>
           <button className={shownPicture ? 'avatar pic' : 'avatar'} onClick={openWallets} aria-label="Wallets" data-wallet-picture={shownPicture?.type ?? ''}>
-            {shownPicture ? <img src={shownPicture.thumb} alt="" draggable={false} /> : <Mark size={21} />}
+            {shownPicture ? <img src={shownPicture.thumb} alt="" draggable={false} /> : <Mark size={33} />}
           </button>
           <div>
             {/* the name opens the device's wallets; the address under it is copied by a tap */}

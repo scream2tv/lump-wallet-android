@@ -21,7 +21,7 @@ export function Wallets({ wallets, activeId, busy, err, onPick, onAdd, onClose }
             const shown = pic?.held ? pic : null
             return (
             <button key={w.id} className="token" style={{ width: '100%', textAlign: 'left' }} disabled={!!busy} data-wallet={w.id} onClick={() => { if (w.id === activeId) onClose(); else onPick(w.id) }}>
-              <div className={shown ? 'avatar pic' : 'avatar'}>{shown ? <img src={shown.thumb} alt="" draggable={false} /> : <Mark size={21} />}</div>
+              <div className={shown ? 'avatar pic' : 'avatar'}>{shown ? <img src={shown.thumb} alt="" draggable={false} /> : <Mark size={33} />}</div>
               <div className="grow">
                 <div className="name">{w.name}</div>
                 <div className="tiny mono">{short(w.address) || 'not opened on this device yet'}</div>
