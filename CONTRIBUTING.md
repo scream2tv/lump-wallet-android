@@ -6,7 +6,8 @@ code and say what is wrong with it. Criticism is as welcome as code.
 ## Ways to help
 
 - **Read and question.** The most useful starting points are [the security model](docs/SECURITY.md), the vault
-  (`src/core/vault.ts`), the Cardano transaction checks (`src/core/cardanoTx.ts`), and the native in-app browser
+  (`src/core/vault.ts`), what a site's transaction may carry (`src/dapp/guard.ts`), the Cardano transaction checks
+  (`src/core/cardanoTx.ts`), and the native in-app browser
   (`android/.../DappBrowserPlugin.java`).
 - **Report a problem** in an issue: what you did, what you expected, what happened, the build number from the
   bottom of Settings, and your Android version.
@@ -21,7 +22,7 @@ for them.
 
 1. Keep a change to one subject.
 2. `npx tsc -b` must pass, and so must the self-contained tests (`node test/provider-proxy.mjs`,
-   `node test/split.mjs`).
+   `node test/split.mjs`, `node test/dapp-guard.mjs`).
 3. A change to anything that signs, stores keys, parses a transaction or talks to a site needs a test that fails
    without it.
 4. Say in the description how you tested, and on what.

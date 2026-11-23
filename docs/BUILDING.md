@@ -116,6 +116,13 @@ node test/provider-proxy.mjs
 node test/split.mjs
 ```
 
+```bash
+node test/dapp-guard.mjs
+```
+
+The last one builds hostile site transactions with the real ledger and the SDK's own signing step and checks that
+the wallet refuses them.
+
 With a browser (`npx playwright install chromium`); each starts the dev server and a wallet server of its own on
 spare ports and uses throwaway wallets:
 
@@ -125,6 +132,7 @@ spare ports and uses throwaway wallets:
 | `test/wallets.mjs` | Several wallets: add, switch, remove, storage separation |
 | `test/favorites-ui.mjs` | Browser favorites |
 | `test/dapp-queue.mjs` | Approval queue: one send per transaction, late requests, expiry |
+| `test/dapp-hostile.mjs` | A hostile site at the connector: refused before any sheet, nothing signed; full amounts on the sheet; trades paid to another address |
 | `test/smoke.mjs` | New wallet to the home screen (needs the local services) |
 | `test/cardano-keys.mjs` | Cardano key derivation and signatures against a full Cardano library (`npm ci` in `server/cardano` first) |
 

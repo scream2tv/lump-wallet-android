@@ -113,6 +113,15 @@ Client addresses are visible to the server like to any web server. Rate limits a
   by default). Approve buttons arm after about a second so that a tap aimed at the page cannot land on them.
 - `signData` shows text as text. Data given as hex or base64 is shown as such and cannot be meaningfully read by
   a person: sign only what a site you trust asks for.
+- **A site cannot name the wallet's coins itself** (`src/dapp/guard.ts`). Balancing a site's transaction ends with
+  the wallet's signature on the site's intents, and that signature covers every public coin of the wallet they
+  spend, whoever listed it. So a transaction that already spends a coin of this wallet, or registers its key for
+  fee energy, is refused before any sheet comes up, and again on the exact bytes at the point of signing. The
+  wallet's own coins enter a site's transaction only through balancing.
+- **The amounts on a sheet are counted per part of the transaction.** A transaction has a part that always happens
+  and parts that may fail on their own; a surplus in one does not offset a shortfall in another, so every shortfall
+  is shown in full.
+- A trade offer (`makeIntent`) whose proceeds go to an address that is not this wallet's says so on the sheet.
 - Approval sheets summarise a transaction's effect on the wallet; they do not show the raw transaction. Connect
   only to sites you trust, as you would with any wallet.
 - Connections do not expire by themselves. They are listed, and can be removed, in Settings.

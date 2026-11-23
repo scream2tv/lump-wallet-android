@@ -35,6 +35,7 @@ jobs:
         run: |
           node test/provider-proxy.mjs
           node test/split.mjs
+          node test/dapp-guard.mjs
       - name: Web build
         run: npx vite build
       - run: npx cap sync android

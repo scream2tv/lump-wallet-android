@@ -169,6 +169,8 @@ injected at document start in the top frame and exposes the Midnight DApp Connec
 
 - Connecting, reading balances and addresses, and every transaction go through an approval sheet in the wallet's
   own page, which a site cannot draw over or click. Approve buttons arm after a short delay.
+- A site's transaction may not spend the wallet's own coins: the wallet adds them itself when it balances, and
+  refuses a transaction that brings them along (`src/dapp/guard.ts`, and why: [security model](SECURITY.md#sites-in-the-in-app-browser)).
 - Answers are delivered only while the page is still on the origin that asked.
 - The browser view cannot reach the wallet page's own address (`https://localhost` in the app).
 - Connections are stored per origin and per wallet, and are listed in Settings.

@@ -22,6 +22,9 @@ export function Approve({ ask, snap, priceFor, nfts, onAnswer }: { ask: Ask; sna
   const feeless = (ask.kind === 'balance' || ask.kind === 'transfer' || ask.kind === 'intent') && !ask.payFees
   const readyIn = snap.readyForTxAt ? Math.max(0, Math.ceil((snap.readyForTxAt - Date.now()) / 1000)) : null
   const blocked = moves && (feeless ? !snap.tradeReady : (snap.phase !== 'ready' || readyIn == null || readyIn > 0))
+  // an amount a trade pays to an address that is not this wallet's is not something "you receive"
+  const same = (a: string, b: string) => a !== '' && a.toLowerCase() === (b ?? '').toLowerCase()
+  const toMe = (recipient: string) => same(recipient, snap.unshieldedAddress) || same(recipient, snap.shieldedAddress)
   const title = ask.kind === 'connect' ? 'Connect' : ask.kind === 'submit' ? 'Send transaction' : ask.kind === 'intent' ? 'Approve trade' : ask.kind === 'sign' ? 'Sign message' : 'Approve transaction'
 
   return (
@@ -69,9 +72,16 @@ export function Approve({ ask, snap, priceFor, nfts, onAnswer }: { ask: Ask; sna
           <div className="card" style={{ display: 'grid', gap: 11 }}>
             <div className="tiny">You offer</div>
             {ask.pays.map((a) => <AmountRow key={a.lane + a.type} a={a} priceFor={priceFor} nft={nftOf(a)} />)}
-            {ask.receives.length > 0 && <div className="tiny">You receive</div>}
-            {ask.receives.map((o, i) => (
-              <div key={i} style={{ display: 'grid', gap: 3 }}>
+            {ask.receives.some((o) => toMe(o.recipient)) && <div className="tiny">You receive</div>}
+            {ask.receives.filter((o) => toMe(o.recipient)).map((o, i) => (
+              <div key={'me' + i} style={{ display: 'grid', gap: 3 }}>
+                <AmountRow a={o} priceFor={priceFor} />
+                <div className="tiny mono" style={{ wordBreak: 'break-all' }}>to {o.recipient}</div>
+              </div>
+            ))}
+            {ask.receives.some((o) => !toMe(o.recipient)) && <div className="err" data-not-mine>Paid to another address, not to this wallet</div>}
+            {ask.receives.filter((o) => !toMe(o.recipient)).map((o, i) => (
+              <div key={'other' + i} style={{ display: 'grid', gap: 3 }}>
                 <AmountRow a={o} priceFor={priceFor} />
                 <div className="tiny mono" style={{ wordBreak: 'break-all' }}>to {o.recipient}</div>
               </div>

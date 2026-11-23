@@ -52,6 +52,10 @@ confirmed it within 90 seconds, `submitTransaction` rejects with `InternalError`
 
 ## Limits
 
+- **Do not put the wallet's coins into a transaction yourself.** A transaction handed to
+  `balanceUnsealedTransaction` or `balanceSealedTransaction` that already spends a public coin of the wallet, or
+  carries a fee energy registration for its key, is rejected with `InvalidRequest`. Leave the shortfall open: the
+  wallet adds its coins when it balances. To have the wallet offer specific amounts, use `makeIntent`.
 - One approval at a time. A second request waits its turn.
 - One send per transaction: asking again for the same transaction returns the first request's result.
 - A transaction the node would refuse for its validation cost is refused by the wallet with a readable message

@@ -22,6 +22,7 @@ import { clearBirthday, dustStateBefore, fetchBootstrap, fetchBootstrapDays, gra
 import { dustSearching, mustReplayDust, noteReplayDust, readDustSearch, writeDustSearch } from './dustNotes'
 import { energyState } from './energy'
 import { NotConfirmedYet, sendSettled } from './sendWait'
+import { ownClaims, refusal, type VerifyingKey } from '../dapp/guard'
 import type { ParsedAddress, SendPhase } from './send'
 import { provingService } from './prover'
 import { partsEstimate, sendInParts } from './split'
@@ -931,6 +932,14 @@ export class WalletSession {
     return { coin: a.coinPublicKeyString(), enc: a.encryptionPublicKeyString() }
   }
 
+  /** The key behind the public address, as the ledger writes an owner of public coins. */
+  verifyingKey(): VerifyingKey {
+    const ks = this.keystore
+    if (!ks) throw new Error('wallet not running')
+    const k = ks.getPublicKey() as VerifyingKey
+    return { tag: k.tag, value: k.value }
+  }
+
   /**
    * Balance a dApp's transaction: add the user's inputs/outputs (and the DUST fee when payFees), sign, prove the
    * balancing part through the prover and return the sealed transaction. Reserved coins are released on failure.
@@ -940,6 +949,11 @@ export class WalletSession {
   async dappBalance(bytes: Uint8Array, sealed: boolean, payFees: boolean): Promise<Uint8Array> {
     const f = this.facade
     if (!f) throw new Error('wallet not running')
+    // The signature below goes on the SITE'S intents and covers every public coin of this wallet they spend, whoever
+    // listed it. So the site's transaction must not bring any: checked here, on the very bytes that are balanced and
+    // signed, whatever the caller checked (dapp/guard.ts). What cannot be read is not signed.
+    const why = refusal(ownClaims(ledger.Transaction.deserialize('signature', 'proof', sealed ? 'binding' : 'pre-binding', bytes), this.verifyingKey()))
+    if (why) throw new Error(why)
     const opts = { ttl: new Date(Date.now() + 30 * 60_000), tokenKindsToBalance: (payFees ? 'all' : ['shielded', 'unshielded']) as 'all' | Array<'shielded' | 'unshielded'> }
     const recipe = sealed
       ? await f.balanceFinalizedTransaction(f.adoptTransaction(bytes, 'Finalized'), opts)

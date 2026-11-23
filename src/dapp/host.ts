@@ -10,9 +10,9 @@ import { dec, enc, fromB64, fromHex, toHex } from './codec'
 import { proverPost } from '../core/prover'
 import { addDappEntry, describePays, type DappNote } from './log'
 import { NotConfirmedYet } from '../core/sendWait'
+import { deficits, ownClaims, refusal, type Amount, type Lane } from './guard'
 
-export type Lane = 'public' | 'private'
-export type Amount = { type: string; value: bigint; lane: Lane }
+export type { Amount, Lane } from './guard'
 export type Ask =
   | { kind: 'connect'; origin: string }
   | { kind: 'balance'; origin: string; pays: Amount[]; complete: boolean; fee: bigint; payFees: boolean }
@@ -179,6 +179,12 @@ export class DappHost {
     let tx: any
     try { tx = ledger.Transaction.deserialize('signature', 'proof', sealed ? 'binding' : 'pre-binding', bytes) }
     catch { throw new ApiError('InvalidRequest', `not a ${sealed ? 'sealed' : 'unsealed'} transaction`) }
+    // Before any sheet: the wallet's signature on a site's transaction covers every coin of this wallet in it, so a
+    // transaction that brings such coins along is not balanced at all (dapp/guard.ts). The session checks again at
+    // the point of signing.
+    let why: string | null
+    try { why = refusal(ownClaims(tx, this.session.verifyingKey())) } catch { why = 'this transaction could not be read in full' }
+    if (why) throw new ApiError('InvalidRequest', why)
     const { pays, complete } = deficits(tx)
     let fee = 0n
     try { if (payFees) fee = await this.session.feeOf(bytes, sealed) } catch {}
@@ -445,31 +451,6 @@ export class DappHost {
 function txBytes(v: unknown): Uint8Array {
   if (typeof v !== 'string') throw new ApiError('InvalidRequest', 'transaction must be a hex string')
   try { return fromHex(v) } catch { throw new ApiError('InvalidRequest', 'transaction must be a hex string') }
-}
-
-/**
- * What the wallet must add to make the dApp's transaction balance: its deficits (negative imbalances), summed over
- * the guaranteed section and every fallible segment. DUST is the fee and is shown separately. `complete` is false
- * when any segment could not be read: the sheet must then not claim to know the full cost.
- */
-export function deficits(tx: any): { pays: Amount[]; complete: boolean } {
-  let complete = true
-  const segs = new Set<number>([0])
-  for (const m of [tx.intents, tx.fallibleOffer]) if (m instanceof Map) for (const k of m.keys()) segs.add(Number(k))
-  const acc = new Map<string, Amount>()
-  for (const seg of segs) {
-    let imb: Map<any, bigint>
-    try { imb = tx.imbalances(seg) } catch { complete = false; continue }
-    for (const [tt, v] of imb) {
-      if (!tt || tt.tag === 'dust') continue
-      const lane: Lane = tt.tag === 'shielded' ? 'private' : 'public'
-      const key = `${lane}:${tt.raw}`
-      const cur = acc.get(key) ?? { type: String(tt.raw).toLowerCase(), value: 0n, lane }
-      cur.value += BigInt(v)
-      acc.set(key, cur)
-    }
-  }
-  return { pays: [...acc.values()].filter((a) => a.value < 0n).map((a) => ({ ...a, value: -a.value })), complete }
 }
 
 function shortReason(e: unknown): string {
