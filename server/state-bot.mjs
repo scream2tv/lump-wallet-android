@@ -42,7 +42,7 @@ const NET = {
   indexerUrl: process.env.LW_INDEXER ?? 'http://127.0.0.1:8188/api/v4/graphql',
   indexerWsUrl: process.env.LW_INDEXER_WS ?? 'ws://127.0.0.1:8188/api/v4/graphql/ws',
   nodeWs: process.env.LW_NODE_WS ?? 'ws://127.0.0.1:3142',
-  prover: process.env.LW_PROVER ?? 'http://127.0.0.1:26300',
+  prover: process.env.LW_PROVER ?? 'http://127.0.0.1:6300',
 }
 // same rules as src/core/net.ts (keep in sync): the indexer is one deployment whether reached on its local port or
 // through the public path. LW_INDEXER_ID names its database (the app's VITE_INDEXER_ID: change both whenever the

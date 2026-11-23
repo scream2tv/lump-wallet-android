@@ -1,7 +1,7 @@
 // Favorite sites of the in-app browser: the list at the top of Apps. This device only, shared by its wallets (like
 // the recently opened sites); nothing here is sent anywhere.
 //
-// A device starts with our own sites as favorites. They are ordinary favorites: a person can remove them, and a
+// A device starts with a few default sites as favorites. They are ordinary favorites: a person can remove them, and a
 // removed one stays removed. `offered` remembers which of the defaults this device has been given, so a default
 // that a later build adds arrives once and one that was removed does not come back.
 export type Favorite = { url: string; name: string; hint?: string }
@@ -13,7 +13,6 @@ export const DEFAULT_FAVORITES: Favorite[] = [
   { name: 'LumpTools', hint: 'Markets, wallets and NFTs on Midnight', url: 'https://lumptools.xyz/midnight' },
   { name: 'LumpFun', hint: 'Launch and trade tokens', url: 'https://lumpfun.com' },
   { name: 'Midnight Station', hint: 'NFT marketplace on Midnight', url: 'https://midnightstation.io' },
-  { name: 'Mint testing', hint: 'Try a mint on Midnight Station', url: 'https://mint.midnightstation.io' },
 ]
 
 /** One page, however its address is written: https only, no fragment, no trailing slash. null: not a page that can be a favorite. */
@@ -56,7 +55,7 @@ export function addFavorite(url: string, title: string): Favorite[] {
   const k = pageKey(url)
   const s = read()
   if (!k || s.list.some((f) => pageKey(f.url) === k) || s.list.length >= MAX) return s.list
-  // one of our own sites put back keeps the name and the line it had
+  // a default site put back keeps the name and the line it had
   const own = DEFAULT_FAVORITES.find((d) => pageKey(d.url) === k)
   const name = title.replace(/\s+/g, ' ').trim().slice(0, 60) || new URL(url).host
   const next = { list: [...s.list, own ?? { url: k, name }], offered: s.offered }

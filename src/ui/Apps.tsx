@@ -79,7 +79,7 @@ function SiteRow({ name, hint, accent, logo, onOpen, side }: { name: string; hin
 }
 
 /**
- * Apps: an address bar, our own sites, recent and connected sites. A site opens in the in-app browser below our own
+ * Apps: an address bar, the favorites, recent and connected sites. A site opens in the in-app browser below the wallet's
  * top bar (the app), where it can ask this wallet to connect; in a plain web build it opens in the device's browser.
  */
 export function Apps({ onBack, onToast }: { onBack: () => void; onToast: (m: string) => void }) {

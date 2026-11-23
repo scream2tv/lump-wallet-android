@@ -176,10 +176,11 @@ function dappLog(req, res) {
 // private inputs of the proof (for a spend of private coins: key material, see docs/SECURITY.md), so this door and the
 // proof servers behind it are trusted with them; nothing is kept or logged beyond size and timing. It only spends CPU, so it is bounded: bodies up to 64 MB (a
 // dApp's circuit key travels with its proof), 3 proofs at once, 30 requests a minute per client.
-//   WALLET_PROVERS  proof servers in order of preference, comma separated. Default: the GPU proof server (:26301),
-//                   then the CPU one (:26300). The next one is asked only when one cannot be reached or answers 5xx;
+//   WALLET_PROVERS  proof servers in order of preference, comma separated (for example a fast one first and a
+//                   spare behind it). Default: one proof server on its standard port (:6300), which has to be one
+//                   for the ledger version the chain is on. The next one is asked only when one cannot be reached or answers 5xx;
 //                   a 4xx (a request the prover refuses) is final.
-const PROVERS = (process.env.WALLET_PROVERS ?? process.env.WALLET_PROVER ?? 'http://127.0.0.1:26301,http://127.0.0.1:26300').split(',').map((u) => u.trim().replace(/\/+$/, '')).filter(Boolean)
+const PROVERS = (process.env.WALLET_PROVERS ?? process.env.WALLET_PROVER ?? 'http://127.0.0.1:6300').split(',').map((u) => u.trim().replace(/\/+$/, '')).filter(Boolean)
 /** Ask the proof servers in order; resolves with the first answer that is not a server-side failure. */
 async function askProver(path, init, timeoutMs) {
   let last = null

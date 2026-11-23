@@ -306,7 +306,7 @@ try {
   await sleep(600)
   {
     const favs = await page.locator('[data-favorites] .token .name').allInnerTexts().catch(() => [])
-    check('Apps lists the favorites: our four sites', favs.length === 4 && ['LumpTools', 'LumpFun', 'Midnight Station', 'Mint testing'].every((n) => favs.includes(n)), favs.join(', '))
+    check('Apps lists the favorites: the three default sites', favs.length === 3 && ['LumpTools', 'LumpFun', 'Midnight Station'].every((n) => favs.includes(n)), favs.join(', '))
   }
   await shot('apps-after-browser')
   await pressBack()

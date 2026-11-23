@@ -95,7 +95,7 @@ cd server/cardano && npm ci && node door.mjs
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `STATIC_PORT` | `3143` | Listening port (localhost) |
-| `WALLET_PROVERS` | `http://127.0.0.1:26301,http://127.0.0.1:26300` | Proof servers in order of preference; the next is asked only when one is unreachable or answers 5xx |
+| `WALLET_PROVERS` | `http://127.0.0.1:6300` | Proof servers in order of preference, comma separated; the next is asked only when one is unreachable or answers 5xx |
 | `CARDANO_DOOR` | `http://127.0.0.1:3148` | The Cardano door |
 | `MARKET_URL`, `ADA_USD_URL` | LumpTools public feeds | Price sources |
 | `WALLET_ANDROID_DIR` | `out/android/` | Published APKs and `published.json` |

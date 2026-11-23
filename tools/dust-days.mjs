@@ -40,7 +40,7 @@ const cfg = {
   forks: DefaultForkSchedule,
   costParameters: { feeBlocksMargin: 5 },
   relayURL: new URL(process.env.LW_NODE_WS ?? 'ws://127.0.0.1:3142'),
-  provingServerUrl: new URL(process.env.LW_PROVER ?? 'http://127.0.0.1:26300'),
+  provingServerUrl: new URL(process.env.LW_PROVER ?? 'http://127.0.0.1:6300'),
   indexerClientConnection: { indexerHttpUrl: INDEXER_URL, indexerWsUrl: INDEXER_WS },
   txHistoryStorage: new InMemoryTransactionHistoryStorage(WalletEntrySchema, mergeWalletEntries),
   batchUpdates: { size: 100, timeout: 1, spacing: 1 },

@@ -48,7 +48,7 @@ export function sendErrorMessage(e: unknown): string {
   const msg = String((e as any)?.message ?? e)
   if (/\b170\b|InvalidDustSpendProof/i.test(msg)) return 'Fee energy is not ready yet. Wait a minute and try again.'
   if (/insufficient|not enough|NotEnough/i.test(msg)) return 'Not enough balance or fee energy for this transfer.'
-  if (/prov(e|ing)|proof server|6300|prove-station/i.test(msg)) return 'The prover did not answer. Check Settings → Prover, then try again.'
+  if (/prov(e|ing)|proof server|6300/i.test(msg)) return 'The prover did not answer. Check Settings → Prover, then try again.'
   if (/ttl|expired/i.test(msg)) return 'The transaction expired before it was sent. Try again.'
   return msg.length > 160 ? msg.slice(0, 157) + '…' : msg
 }

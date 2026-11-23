@@ -1,5 +1,5 @@
 // Favorite sites on the Apps screen (core/favorites.ts, ui/Apps.tsx), in a web build with a THROWAWAY new wallet.
-//   - a device starts with our own four sites as favorites, in order
+//   - a device starts with the three default sites as favorites, in order
 //   - Edit removes one; a removed default stays removed after a restart
 //   - a site that was opened stands under Recent with a star; the star makes it a favorite and it leaves Recent
 //   - the list is kept on the device and nothing else is stored with it
@@ -55,10 +55,10 @@ try {
   // ---- the defaults ----
   await openApps()
   let n = await names()
-  check(JSON.stringify(n) === JSON.stringify(['LumpTools', 'LumpFun', 'Midnight Station', 'Mint testing']), `a device starts with our four sites as favorites, in order: ${n.join(', ')}`)
+  check(JSON.stringify(n) === JSON.stringify(['LumpTools', 'LumpFun', 'Midnight Station']), `a device starts with the three default sites as favorites, in order: ${n.join(', ')}`)
   let t = await text()
-  check(/Favorites Edit/.test(t) && /Markets, wallets and NFTs on Midnight/.test(t) && /Try a mint on Midnight Station/.test(t) && !/Recent/.test(t), 'each has its line, and there is an Edit; nothing is under Recent yet')
-  check((await page.locator('[data-favorites] img.logo.site').count()) === 4, 'each shows its site\'s own mark')
+  check(/Favorites Edit/.test(t) && /Markets, wallets and NFTs on Midnight/.test(t) && /NFT marketplace on Midnight/.test(t) && !/Recent/.test(t), 'each has its line, and there is an Edit; nothing is under Recent yet')
+  check((await page.locator('[data-favorites] img.logo.site').count()) === 3, 'each shows its site\'s own mark')
   await page.screenshot({ path: join(ROOT, 'test/out/favorites-1.png'), fullPage: true })
 
   // ---- a favorite opens; Edit removes one ----
@@ -74,7 +74,7 @@ try {
   await page.getByRole('button', { name: 'Remove LumpFun' }).click()
   await page.getByText('Done', { exact: true }).click()
   n = await names()
-  check(JSON.stringify(n) === JSON.stringify(['LumpTools', 'Midnight Station', 'Mint testing']), `Edit, the cross on LumpFun, Done: ${n.join(', ')}`)
+  check(JSON.stringify(n) === JSON.stringify(['LumpTools', 'Midnight Station']), `Edit, the cross on LumpFun, Done: ${n.join(', ')}`)
 
   // ---- a site that was opened: under Recent with a star; the star makes it a favorite ----
   await page.getByPlaceholder('Search or enter address').fill('example.org/shop?x=1')
@@ -96,18 +96,18 @@ try {
   await page.locator('.token', { hasText: 'example.org' }).getByRole('button', { name: 'Add to favorites' }).click()
   n = await names()
   t = await text()
-  check(n.length === 4 && n[3] === 'example.org' && !/Recent Clear .{0,6}example\.org/.test(t), `the star makes it a favorite, last in the list, and it leaves Recent: ${n.join(', ')}`)
+  check(n.length === 3 && n[2] === 'example.org' && !/Recent Clear .{0,6}example\.org/.test(t), `the star makes it a favorite, last in the list, and it leaves Recent: ${n.join(', ')}`)
   await page.locator('.token', { hasText: 'lumpfun.com' }).getByRole('button', { name: 'Add to favorites' }).click()
   n = await names()
   t = await text()
-  check(n.length === 5 && n[4] === 'LumpFun' && /Launch and trade tokens/.test(t) && !/Recent/.test(t), `one of our own sites put back has its name and line again: ${n.join(', ')}`)
+  check(n.length === 4 && n[3] === 'LumpFun' && /Launch and trade tokens/.test(t) && !/Recent/.test(t), `one of the default sites put back has its name and line again: ${n.join(', ')}`)
   await page.screenshot({ path: join(ROOT, 'test/out/favorites-2.png'), fullPage: true })
 
   // ---- kept on the device ----
   const s = await stored()
-  check(s && s.list.length === 5 && s.offered.length === 4 && Object.keys(s).sort().join() === 'list,offered' && s.list.every((f) => Object.keys(f).every((k) => ['url', 'name', 'hint'].includes(k))), 'the list is kept on the device: addresses, names and lines, nothing else')
+  check(s && s.list.length === 4 && s.offered.length === 3 && Object.keys(s).sort().join() === 'list,offered' && s.list.every((f) => Object.keys(f).every((k) => ['url', 'name', 'hint'].includes(k))), 'the list is kept on the device: addresses, names and lines, nothing else')
   await page.getByText('Edit', { exact: true }).click()
-  await page.getByRole('button', { name: 'Remove Mint testing' }).click()
+  await page.getByRole('button', { name: 'Remove Midnight Station' }).click()
   await page.getByText('Done', { exact: true }).click()
   await page.reload({ waitUntil: 'load' })
   await page.getByText('Enter your PIN').waitFor({ timeout: 60_000 })
@@ -115,7 +115,7 @@ try {
   await page.getByText('Fee energy', { exact: true }).waitFor({ timeout: 120_000 })
   await openApps()
   n = await names()
-  check(JSON.stringify(n) === JSON.stringify(['LumpTools', 'Midnight Station', 'example.org', 'LumpFun']), `after a restart the list is as it was left, and a removed default stays removed: ${n.join(', ')}`)
+  check(JSON.stringify(n) === JSON.stringify(['LumpTools', 'example.org', 'LumpFun']), `after a restart the list is as it was left, and a removed default stays removed: ${n.join(', ')}`)
   // every one removed: the screen says how to get one
   await page.getByText('Edit', { exact: true }).click()
   for (const name of n) await page.getByRole('button', { name: `Remove ${name}` }).click()

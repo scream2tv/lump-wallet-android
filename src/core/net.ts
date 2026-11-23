@@ -36,15 +36,13 @@ export const DEFAULTS: Endpoints = {
   // desktop dev talks to the node guard on this machine; phones go through the guarded public path
   nodeWs: LOCAL_DEV ? (env('VITE_DEV_NODE_WS') ?? 'ws://127.0.0.1:3142') : (env('VITE_NODE_WS') ?? `wss://${SERVER}/node`),
   // a ledger-9 proof server: the one on this machine in dev, the wallet server's own prover door for phones
-  prover: LOCAL_DEV ? 'http://127.0.0.1:26300' : (env('VITE_PROVER_URL') ?? `https://${SERVER}/wallet/api/prover`),
+  prover: LOCAL_DEV ? 'http://127.0.0.1:6300' : (env('VITE_PROVER_URL') ?? `https://${SERVER}/wallet/api/prover`),
 }
 
 /** Saved endpoints that can no longer work fall back to the default. */
 const RETIRED: Array<{ keys: Array<keyof Endpoints>; test: (u: URL) => boolean }> = [
   // the public indexer was decommissioned 2026-10-09 (HTTP 410)
   { keys: ['indexerUrl', 'indexerWsUrl'], test: (u) => u.hostname === 'indexer.mainnet.midnight.network' },
-  // ledger-8 proof servers: mainnet is on ledger 9 since 2026-11-06 and refuses what they prove
-  { keys: ['prover'], test: (u) => (u.host === SERVER && /^\/(prove-station|prove-lite)?\/?$/.test(u.pathname)) || (/^(127\.0\.0\.1|localhost)$/.test(u.hostname) && u.port === '6300') },
 ]
 
 /**

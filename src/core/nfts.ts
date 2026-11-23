@@ -139,7 +139,7 @@ export function readCollection(contract: string, stateHex: string): Collection |
 
 /**
  * The token type of item `index` (from 0) of a collection contract, by the item scheme of the Midnight NFT standard
- * our own collections use: domain = SHA-256(pad32("midnight-station:item:v1") || index as 32 bytes little-endian),
+ * that Midnight Station's collections use: domain = SHA-256(pad32("midnight-station:item:v1") || index as 32 bytes little-endian),
  * type = the ledger's token type of that domain and the contract's address. test/item-id.mjs checks it against
  * items on mainnet. A type that matches is proof the contract issued the token: no other address gives it.
  */

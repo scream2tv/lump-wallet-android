@@ -30,7 +30,7 @@ npm run dev
 ```
 
 The dev server (`http://127.0.0.1:5179`) expects the services on the same machine: an indexer on `:8188`, the node
-guard on `:3142` (`npm run guard`), a proof server on `:26300`, and the wallet server on `:3143` (`npm run serve`).
+guard on `:3142` (`npm run guard`), a proof server on `:6300`, and the wallet server on `:3143` (`npm run serve`).
 `VITE_DEV_NODE_WS` and `WALLET_API` point it elsewhere.
 
 Everything except the in-app browser, the back button and background sync works in a desktop browser, which is
