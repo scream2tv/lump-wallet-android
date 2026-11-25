@@ -16,6 +16,12 @@
 // A contract is accepted for a token only when its record map holds that token type. Nothing here is trusted
 // beyond display: names and pictures are whatever the contract's deployer wrote.
 //
+// WRAPPED NFTS OF ANOTHER CHAIN (2026-11-24): a contract can hold, beside the layout above, which Cardano asset each
+// of its tokens stands for (the NFT itself waits in a vault on Cardano while the token exists here). Such a token
+// is minted by the contract's operator, not by the holder, through an entry point named "wrap", and its type
+// follows from the contract's address and the asset's name (wrappedItemType): that is the proof the contract
+// issued it, and it is what lets the wallet say where the NFT comes from.
+//
 // WHERE THE DATA COMES FROM, and why (2026-11-21):
 //   - A contract's state is read from the NODE (midnight_contractState, through the node door the wallet already
 //     uses): a direct read of the current state, tens of milliseconds.
@@ -31,7 +37,18 @@ import { KNOWN } from './tokens'
 
 export type Lane = 'public' | 'private'
 export type NftRecord = { name: string; symbol?: string; decimals?: number; description?: string; image?: string; mediaType?: string }
-export type Collection = { contract: string; name: string; records: Map<string, NftRecord>; supply: Map<string, bigint> }
+/**
+ * The NFT on another chain that a token stands for. Shown only when the token's type proves the collection contract
+ * issued it for that asset; `policy` is what that contract states (a listed collection is one this wallet has matched to its project).
+ */
+export type Origin = { chain: 'cardano'; /** asset name: as text when it is plain text, else its hex */ asset: string; /** asset name, hex */ assetHex: string; /** policy id, 56 hex */ policy?: string }
+export type Collection = {
+  contract: string; name: string; records: Map<string, NftRecord>; supply: Map<string, bigint>
+  /** wrapped NFTs only: token type -> the asset name it stands for (32 bytes, zero-padded) and that name's length */
+  origins?: Map<string, { name: Uint8Array; length: number }>
+  /** wrapped NFTs only: the policy id the contract states, 56 hex */
+  policy?: string
+}
 export type Nft = {
   /** token type, 64 hex */
   type: string
@@ -46,6 +63,8 @@ export type Nft = {
   mediaType?: string
   /** the collection is on this wallet's own list (see LISTED) */
   listed: boolean
+  /** a wrapped NFT of another chain: what it stands for there (proven by the token's type) */
+  origin?: Origin
 }
 
 /**
@@ -59,6 +78,9 @@ export const LISTED: ReadonlyArray<{ contract: string; checked: boolean }> = [
   { contract: 'ee7b3a9599fe37ebf53e65c6f86f8f382cfc6a851fd0b6b8b457eda0b40dfb12', checked: true },
   { contract: '10092000e25dfaa9f606ffb6d80ed9ebf2f145271375bc4cf01a7552ecacc16e', checked: true },
   { contract: '1521a84470951f89eb6afb142e64b1b3d67cb464e43d48af361edc0ecf1bbdc1', checked: true },
+  // Cardano NFTs, each held in a vault on Cardano while its token exists here: Chilled Kongs (Cardano), Magic Kongs (Cardano)
+  { contract: 'afccb0f2379d76b1f0c7f595fae9f72ecca3a74888b27e8b1bdc7df7edd3818e', checked: true },
+  { contract: '58891eeb312deb120f30b210610a44eabc773f595ad7f8114433d61e25bf2655', checked: true },
 ]
 const listedSet = new Set(LISTED.map((l) => l.contract))
 export const isChecked = (contract: string) => LISTED.some((l) => l.contract === contract && l.checked)
@@ -126,15 +148,72 @@ export function readCollection(contract: string, stateHex: string): Collection |
   }
   if (records.size === 0) return null
   const supply = new Map<string, bigint>()
+  let supplyAt = -1
   for (let i = slot + 1; i < top.length; i++) {
     const m = mapAt(i)
     if (!m) continue
     for (const key of m.keys()) {
       try { const v = m.get(key); if (v?.type() === 'cell') supply.set(hex(Uint8Array.from(key.value[0] ?? [])), num(Uint8Array.from(v.asCell().value[0] ?? []))) } catch { /* not a count */ }
     }
+    supplyAt = i
     break
   }
-  return { contract, name, records, supply }
+  const col: Collection = { contract, name, records, supply }
+  // A contract of wrapped NFTs goes on: the field after the supply map is the policy id (28 bytes) and the next MAP
+  // says, for each token type, which asset it stands for: asset name (32 bytes), its length, and where the NFT is
+  // locked (a transaction, 32 bytes, and an output number). Read only when every entry has exactly that shape.
+  try {
+    for (let i = supplyAt + 1; supplyAt > 0 && i < top.length; i++) {
+      const m = mapAt(i)
+      if (!m) continue
+      const origins = new Map<string, { name: Uint8Array; length: number }>()
+      let shaped = true
+      for (const key of m.keys()) {
+        const v = m.get(key)
+        const a = v?.type() === 'cell' ? v.asCell().value.map((x) => Uint8Array.from(x)) : null
+        const length = a && a[1] ? (a[1].length === 0 ? 0 : a[1][0]) : -1
+        if (!a || a.length !== 4 || a[0].length > 32 || a[1].length > 1 || a[2].length > 32 || a[3].length > 2 || length > 32 || a[0].length > length) { shaped = false; break }
+        const padded = new Uint8Array(32)
+        padded.set(a[0])
+        origins.set(hex(Uint8Array.from(key.value[0] ?? [])), { name: padded, length })
+      }
+      if (shaped && origins.size > 0) {
+        col.origins = origins
+        const p = top[supplyAt + 1]
+        const bytes = p?.type() === 'cell' ? Uint8Array.from(p.asCell().value[0] ?? []) : null
+        if (bytes && bytes.length > 0 && bytes.length <= 28) col.policy = hex(bytes, 28)
+      }
+      break   // only the first map after the supply map can be it
+    }
+  } catch { /* not such a contract */ }
+  return col
+}
+
+/**
+ * The token type of the wrapped NFT that stands for the asset `name` (32 bytes, zero-padded; `length` of them count)
+ * under a contract of wrapped Cardano NFTs: domain = SHA-256(pad32("cardano-nft-shield:item:v1") || name || length as
+ * 32 bytes little-endian), type = the ledger's token type of that domain and the contract's address.
+ * test/origin-id.mjs checks it against the ones on mainnet. A type that matches is proof the contract issued the
+ * token for that asset name: no other address and no other name give it.
+ */
+const WRAP_TAG = (() => { const b = new Uint8Array(32); b.set(new TextEncoder().encode('cardano-nft-shield:item:v1')); return b })()
+export function wrappedItemType(contract: string, name: Uint8Array, length: number): string {
+  const data = new Uint8Array(96)
+  data.set(WRAP_TAG)
+  data.set(name.subarray(0, 32), 32)
+  data[64] = length
+  return String(ledger.rawTokenType(sha256(data), contract)).toLowerCase()
+}
+
+/** What a token stands for on Cardano, when `col` says so AND the token's type proves it; else undefined. */
+export function originOf(col: Collection, type: string): Origin | undefined {
+  const o = col.origins?.get(type)
+  if (!o) return undefined
+  try { if (wrappedItemType(col.contract, o.name, o.length) !== type) return undefined } catch { return undefined }
+  const bytes = o.name.subarray(0, o.length)
+  const assetHex = Array.from(bytes, (x) => x.toString(16).padStart(2, '0')).join('')
+  const plain = bytes.length > 0 && bytes.every((x) => x >= 0x20 && x <= 0x7e)
+  return { chain: 'cardano', asset: plain ? utf8.decode(bytes) : assetHex, assetHex, ...(col.policy ? { policy: col.policy } : {}) }
 }
 
 /**
@@ -182,10 +261,14 @@ export function registeredCollections(stateHex: string): string[] {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /**
- * The contracts a transaction called to mint (or deployed: some collections mint in their deploy), from the indexer.
+ * The contracts a transaction called to bring a token into being, from the indexer: called to MINT (or deployed:
+ * some collections mint in their deploy), or called to WRAP (an operator issuing the token of an NFT held on another
+ * chain). `mint` says which: a contract called to mint names its collection as before, one called to wrap may name
+ * a token only when the token's type proves it (see resolveNfts). No other entry point is looked at, so the wallet
+ * never reads the state of a contract that merely moved a token.
  * A light question: addresses and entry point names, no state. Null when the indexer did not answer.
  */
-export async function mintContractsOfTx(indexerUrl: string, hash: string): Promise<string[] | null> {
+export async function contractsOfTx(indexerUrl: string, hash: string): Promise<Array<{ contract: string; mint: boolean }> | null> {
   let data: { transactions?: Array<{ contractActions?: Array<{ __typename: string; address: string; entryPoint?: string }> }> } | null = null
   try {
     const r = await fetch(indexerUrl, {
@@ -198,13 +281,20 @@ export async function mintContractsOfTx(indexerUrl: string, hash: string): Promi
     data = j?.data ?? null
   } catch { return null }
   if (!data) return null
-  const out = new Set<string>()
+  const out = new Map<string, boolean>()
   for (const t of data.transactions ?? []) for (const a of t.contractActions ?? []) {
     const c = String(a.address).toLowerCase()
-    if (HEX64.test(c) && (a.__typename === 'ContractDeploy' || /mint/i.test(String(a.entryPoint ?? '')))) out.add(c)
+    if (!HEX64.test(c)) continue
+    const entry = String(a.entryPoint ?? '')
+    if (a.__typename === 'ContractDeploy' || /mint/i.test(entry)) out.set(c, true)
+    else if (/wrap/i.test(entry) && !out.has(c)) out.set(c, false)
   }
-  return [...out]
+  // the ones called to mint first
+  return [...out].map(([contract, mint]) => ({ contract, mint })).sort((a, b) => Number(b.mint) - Number(a.mint))
 }
+
+/** The contracts a transaction called to mint (or deployed). Null when the indexer did not answer. */
+export const mintContractsOfTx = async (indexerUrl: string, hash: string): Promise<string[] | null> => (await contractsOfTx(indexerUrl, hash))?.filter((c) => c.mint).map((c) => c.contract) ?? null
 
 /**
  * Reads contracts' current public state from the node, one after another over one connection.
@@ -282,7 +372,7 @@ export function candidates(unshielded: Map<string, bigint>, shielded: Map<string
  * `nfts` is also what loadCachedNfts() returns next time. `more`: another pass soon may find more (the look-ups ran
  * out, or a token's transaction is not in the history yet).
  */
-export async function resolveNfts(net: { nodeWs: string; indexerUrl: string }, held: Array<{ type: string; lane: Lane }>, txHashesOf: (type: string) => string[], opts: { proofs?: boolean } = {}): Promise<{ nfts: Nft[]; more: boolean }> {
+export async function resolveNfts(net: { nodeWs: string; indexerUrl: string }, held: Array<{ type: string; lane: Lane }>, txHashesOf: (type: string) => string[], opts: { proofs?: boolean; /** false: as a wallet with no list and no market (tests) */ lists?: boolean } = {}): Promise<{ nfts: Nft[]; more: boolean }> {
   if (held.length === 0) { writeJson(CACHE_KEY, []); return { nfts: [], more: false } }
   const memo = readJson<Record<string, string>>(MEMO_KEY, {})
   const misses = readJson<Record<string, number>>(MISS_KEY, {})
@@ -306,7 +396,8 @@ export async function resolveNfts(net: { nodeWs: string; indexerUrl: string }, h
     if (r.decimals !== undefined || (count !== undefined && count !== 1n)) return false
     memo[h.type] = col.contract
     delete misses[h.type]
-    out.push({ type: h.type, lane: h.lane, contract: col.contract, collection: col.name, name: r.name || 'Untitled', symbol: r.symbol, description: r.description, image: r.image, mediaType: r.mediaType, listed: listedSet.has(col.contract) })
+    const origin = originOf(col, h.type)
+    out.push({ type: h.type, lane: h.lane, contract: col.contract, collection: col.name, name: r.name || 'Untitled', symbol: r.symbol, description: r.description, image: r.image, mediaType: r.mediaType, listed: listedSet.has(col.contract), ...(origin ? { origin } : {}) })
     return true
   }
   let more = false
@@ -316,6 +407,8 @@ export async function resolveNfts(net: { nodeWs: string; indexerUrl: string }, h
   const issued = new Map<string, Set<string>>()
   const proves = (col: Collection, type: string): boolean => {
     if (opts.proofs === false || !col.records.has(type)) return false
+    // a wrapped NFT: the contract says which asset the token stands for, and the type follows from that name
+    if (originOf(col, type)) return true
     let set = issued.get(col.contract)
     if (!set) { set = new Set(); try { for (let i = 0; i < MAX_ITEM_NUMBER; i++) set.add(stationItemType(col.contract, i)) } catch { /* no proof to be had */ } issued.set(col.contract, set) }
     return set.has(type)
@@ -327,15 +420,16 @@ export async function resolveNfts(net: { nodeWs: string; indexerUrl: string }, h
     // a record for; any other contract claims a token when that token's own mint named it (remembered from step 4,
     // which checks just that) or when the token's type proves the contract issued it. Otherwise a contract that
     // minted one token to this wallet could put its names and pictures on the others.
-    for (const contract of [...LISTED.map((l) => l.contract), ...new Set(open.map((h) => memo[h.type]).filter((c): c is string => !!c && HEX64.test(c)))]) {
+    const lists = opts.lists !== false
+    for (const contract of [...(lists ? LISTED.map((l) => l.contract) : []), ...new Set(open.map((h) => memo[h.type]).filter((c): c is string => !!c && HEX64.test(c)))]) {
       if (open.length === 0) break
       const col = await collection(contract)
       if (col === undefined) { unanswered.add(contract); continue }
-      const any = listedSet.has(contract)
+      const any = lists && listedSet.has(contract)
       if (col) open = open.filter((h) => !((any || memo[h.type] === contract || proves(col, h.type)) && claim(h, col)))
     }
     // 3. the collections a known market trades (its register), for an item bought there: accepted on proof only
-    for (const market of open.length > 0 && opts.proofs !== false ? MARKETS : []) {
+    for (const market of open.length > 0 && opts.proofs !== false && lists ? MARKETS : []) {
       const state = read.size < MAX_CONTRACTS ? await node.get(market) : null
       for (const contract of state ? registeredCollections(state).slice(0, MAX_REGISTERED) : []) {
         if (open.length === 0) break
@@ -355,12 +449,13 @@ export async function resolveNfts(net: { nodeWs: string; indexerUrl: string }, h
       for (const hash of txHashesOf(h.type).slice(0, 2)) {
         if (lookups >= MAX_HINT_TXS) { answered = false; more = true; break }
         if (lookups++ > 0) await sleep(HINT_GAP_MS)
-        const contracts = await mintContractsOfTx(net.indexerUrl, hash)
+        const contracts = await contractsOfTx(net.indexerUrl, hash)
         if (!contracts) { answered = false; continue }
-        for (const contract of contracts) {
+        for (const { contract, mint } of contracts) {
           const col = await collection(contract)
           if (col === undefined) { answered = false; continue }
-          if (col && claim(h, col)) {
+          // called to mint: it names its token, as before. Called to wrap: only on the proof that it issued the token.
+          if (col && (mint || proves(col, h.type)) && claim(h, col)) {
             claimed = true
             // its other items that the type proves are its own come with it, without a look-up each
             open = open.filter((x) => x === h || !(proves(col, x.type) && claim(x, col)))

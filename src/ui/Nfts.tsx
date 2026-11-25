@@ -215,7 +215,18 @@ export function NftDetail({ nft, isHidden, isPicture, onPicture, onSend, onToggl
         <button className="row spread" onClick={() => void copy('Collection address', nft.contract)}>
           <span className="tiny">Collection</span><span className="mono">{shortHex(nft.contract)}</span>
         </button>
+        {nft.origin && (
+          <button className="row spread" data-origin="asset" onClick={() => void copy('Cardano asset name', nft.origin!.asset)}>
+            <span className="tiny">Cardano NFT</span><span className="mono" style={{ overflowWrap: 'anywhere', textAlign: 'right' }}>{nft.origin.asset}</span>
+          </button>
+        )}
+        {nft.origin?.policy && (
+          <button className="row spread" data-origin="policy" onClick={() => void copy('Cardano policy id', nft.origin!.policy!)}>
+            <span className="tiny">Cardano policy</span><span className="mono">{shortHex(nft.origin.policy)}</span>
+          </button>
+        )}
       </div>
+      {nft.origin && <div className="tiny">This token stands for an NFT on Cardano, which is held in a vault there while the token exists.{isChecked(nft.contract) ? '' : ' That is what its contract says; this wallet has not checked the vault.'}</div>}
       {!isChecked(nft.contract) && <div className="tiny">Name and picture come from the collection's own contract. Anyone can send an NFT to an address.</div>}
       <div className="grow" />
       {(isPicture || pictureUrls.length > 0) && (
